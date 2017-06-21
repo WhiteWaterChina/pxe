@@ -10,6 +10,7 @@ import re
 import os
 import subprocess
 import paramiko
+import time
 
 
 class PXEframe(wx.Frame):
@@ -228,7 +229,7 @@ class PXEframe(wx.Frame):
 
         bSizer17 = wx.BoxSizer(wx.VERTICAL)
 
-        self.m_staticText8 = wx.StaticText(self.panel_info, wx.ID_ANY, u"可以在如下输入MAC地址搜索对应的IP地址", wx.DefaultPosition,
+        self.m_staticText8 = wx.StaticText(self.panel_info, wx.ID_ANY, u"可以在如下输入IP或者MAC地址搜索对应的MAC或者地址。\nIP地址格式为1.1.1.1；MAC地址格式为6c-92-bf-4c-77-90", wx.DefaultPosition,
                                            wx.DefaultSize, 0)
         self.m_staticText8.Wrap(-1)
         self.m_staticText8.SetForegroundColour(wx.Colour(255, 0, 0))
@@ -305,7 +306,20 @@ class PXEframe(wx.Frame):
     def __del__(self):
         pass
 
-    # Virtual event handlers, overide them in your derived class
+    def run_command(self, command, timeout=2):
+        cmd = command.split(" ")
+        child_run = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        begin_time = time.time()
+        deadline = begin_time + timeout
+        while True:
+            Flag = child_run.poll()
+            if Flag is not None:
+                break
+            if timeout and time.time() > deadline:
+                child_run.kill()
+                break
+            time.sleep(0.5)
+        return child_run.returncode, child_run.stdout.read()
 
     def mac2ip(self):
         if os.path.exists("dhcpd.leases"):
@@ -321,7 +335,8 @@ class PXEframe(wx.Frame):
             get_dhcp.close()
         except paramiko.ssh_exception.SSHException:
             self.message_error("无法连接至DHCP服务器，请检查网络连接！".decode('gbk'))
-        clientDic = {}
+        clientDic_ip_mac = {}
+        clientDic_mac_ip = {}
         try:
             with open(local_path, 'r') as file_dhcp:
                 contents = file_dhcp.read()
@@ -330,14 +345,15 @@ class PXEframe(wx.Frame):
                     ipaddr = re.findall('lease (.*?) ', each)[0]
                     macaddr = re.findall('ethernet (.*?);', each)[0]
                     macaddr = re.sub(r':', '-', macaddr)
-                    clientDic[ipaddr] = macaddr
+                    clientDic_ip_mac[ipaddr] = macaddr
+                    clientDic_mac_ip[macaddr] = ipaddr
         except IOError:
             self.message_error("DHCP服务器信息下载失败！请检查网络连接！".decode('gbk'))
         try:
             os.remove(local_path)
         except Exception:
             pass
-        return clientDic
+        return clientDic_ip_mac, clientDic_mac_ip
 
     def chose_os(self, event):
         os_version = self.combo_os_version.GetValue()
@@ -390,7 +406,7 @@ class PXEframe(wx.Frame):
                             os_sub_version_min = os_sub_version.split(".")[1]
                             filename_ks_template = os_version + os_sub_version_max + "-" + os_sub_version_min + "_" + os_bit + ".cfg"
                             local_path_ks = os.path.join(os.getcwd(), filename_to_gen)
-                            remote_path_dir = r'/tftpboot/ks_template/'
+                            remote_path_dir = r'/var/www/html/ks/ks_template/'
                             remote_path = os.path.join(remote_path_dir, filename_ks_template)
                             # try:
                             #     down_ks_template = paramiko.Transport('%s:22' % ipaddress_dhcp)
@@ -414,7 +430,10 @@ class PXEframe(wx.Frame):
                             file_ks.write("kernel images/%s/%s%s-%s_%s/vmlinuz" % (os_version, os_version,os_sub_version_max, os_sub_version_min, os_bit) + os.linesep)
                             if os_version == "redhat" or os_version == "centos":
                                 if os_sub_version_max == "7":
-                                    file_ks.write("append initrd=images/%s/%s%s-%s_%s/initrd.img inst.ks=http://%s/ks/ks_template/%s/%s%s-%s_%s.cfg" % (os_version, os_version,os_sub_version_max, os_sub_version_min, os_bit, ipaddress_dhcp, os_version, os_version,os_sub_version_max, os_sub_version_min, os_bit) + os.linesep)
+                                    if os_sub_version_min == "3":
+                                        file_ks.write("append initrd=images/%s/%s%s-%s_%s/initrd.img modprobe.blacklist=qat_c62x inst.ks=http://%s/ks/ks_template/%s/%s%s-%s_%s.cfg" % (os_version, os_version,os_sub_version_max, os_sub_version_min, os_bit, ipaddress_dhcp, os_version, os_version,os_sub_version_max, os_sub_version_min, os_bit) + os.linesep)
+                                    else:
+                                        file_ks.write("append initrd=images/%s/%s%s-%s_%s/initrd.img inst.ks=http://%s/ks/ks_template/%s/%s%s-%s_%s.cfg" % (os_version, os_version, os_sub_version_max, os_sub_version_min, os_bit, ipaddress_dhcp, os_version, os_version, os_sub_version_max, os_sub_version_min, os_bit) + os.linesep)
                                 else:
                                     file_ks.write("append initrd=images/%s/%s%s-%s_%s/initrd.img ks=http://%s/ks/ks_template/%s/%s%s-%s_%s.cfg ksdevice=eth0" % (os_version, os_version, os_sub_version_max, os_sub_version_min, os_bit, ipaddress_dhcp, os_version, os_version, os_sub_version_max, os_sub_version_min, os_bit) + os.linesep)
                             file_ks.close()
@@ -478,53 +497,53 @@ class PXEframe(wx.Frame):
         username_bmc = self.textctrl_bmc_username.GetValue().strip()
         password_bmc = self.textctrl_bmc_password.GetValue().strip()
         if len(bmcip) is not 0 and len(username_bmc) is not 0 and len(password_bmc) is not 0:
-            set_pxe_boot = subprocess.Popen(["ipmitool.exe", "-I", "lanplus", "-H", "%s" % bmcip, "-U", "%s" % username_bmc, "-P", "%s" % password_bmc, "chassis", "bootdev", "pxe"], stdout=subprocess.PIPE)
-            set_pxe_boot.communicate()
-            if set_pxe_boot.returncode != 0:
+            set_pxe_boot, output_1  = self.run_command("ipmitool.exe -I lanplus -H %s -U %s -P %s chassis bootdev pxe" % (bmcip, username_bmc, password_bmc))
+            if set_pxe_boot != 0:
                 self.message_error('PXE启动设置失败！请检查输入！'.decode('gbk'))
             else:
-                check_power_status = subprocess.Popen(["ipmitool.exe", "-I", "lanplus", "-H", "%s" % bmcip, "-U", "%s" % username_bmc, "-P", "%s" % password_bmc, "chassis", "power", "status"], stdout=subprocess.PIPE)
-                check_power_status.communicate()
-                power_status = check_power_status.stdout.read().split(" ")[3].strip()
-                if check_power_status.returncode != 0:
+                check_power_status, output_power_status = self.run_command("ipmitool.exe -I lanplus -H %s -U %s -P %s chassis power status" % (bmcip, username_bmc, password_bmc))
+                if check_power_status != 0:
                     self.message_error('服务器开关机状态获取失败！请检查BMC设置！'.decode('gbk'))
                 else:
+                    power_status = output_power_status.split(" ")[3].strip()
                     if power_status == 'off':
-                        set_server_on = subprocess.Popen(["ipmitool.exe", "-I", "lanplus", "-H", "%s" % bmcip, "-U", "%s" % username_bmc, "-P", "%s" % password_bmc, "chassis", "power", "on"], stdout=subprocess.PIPE)
-                        set_server_on.communicate()
-                        if set_server_on.returncode != 0:
+                        set_server_on, output_3 = self.run_command("ipmitool.exe -I lanplus -H %s -U %s -P %s chassis power on" % (bmcip, username_bmc, password_bmc))
+                        if set_server_on != 0:
                             self.message_error('服务器开机失败！请检查BMC连接状态！'.decode('gbk'))
                         else:
-                            self.message_ok('服务器重启成功！'.decode('gbk'))
+                            self.message_ok('服务器开机成功！'.decode('gbk'))
                     elif power_status == 'on':
-                        set_server_reset = subprocess.Popen(["ipmitool.exe", "-I", "lanplus", "-H", "%s" % bmcip, "-U", "%s" % username_bmc, "-P", "%s" % password_bmc, "chassis", "power", "reset"], stdout=subprocess.PIPE)
-                        set_server_reset.communicate()
-                        if set_server_reset.returncode != 0:
+                        set_server_reset, output_2 = self.run_command("ipmitool.exe -I lanplus -H %s -U %s -P %s chassis power reset" % (bmcip, username_bmc, password_bmc))
+                        if set_server_reset != 0:
                             self.message_error('服务器重启失败！请检查BMC连接状态！'.decode('gbk'))
                         else:
                             self.message_ok('服务器重启成功！'.decode('gbk'))
                     else:
                         self.message_error('获取服务器当前状态异常！请检查BMC连接状态！'.decode('gbk'))
         else:
-            self.message_error('PXE启动失败！请检查输入！'.decode('gbk'))
+            self.message_error('输入缺失！请检查输入！'.decode('gbk'))
 
     def searchip(self, event):
         self.textctrl_show_ipmac.Clear()
-        key_ip = self.textctrl_ip_search.GetValue().strip()
-        if len(key_ip) == 0:
+        key_ip_mac = self.textctrl_ip_search.GetValue().strip()
+        if len(key_ip_mac) == 0:
             self.message_error("输入空白！请重新输入".decode('gbk'))
         else:
-            ipdict = self.mac2ip()
-            if ipdict.has_key(key_ip):
-                content = key_ip + ":    " + ipdict[key_ip]
+            ipdict_ip_mac, ipdict_mac_ip = self.mac2ip()
+            if ipdict_ip_mac.has_key(key_ip_mac):
+                content = key_ip_mac + ":    " + ipdict_ip_mac[key_ip_mac]
                 self.textctrl_show_ipmac.SetValue(content)
             else:
-                self.textctrl_show_ipmac.SetValue('No result match! Please check the input!')
+                if ipdict_mac_ip.has_key(key_ip_mac):
+                    content = ipdict_mac_ip[key_ip_mac] + ":    " + key_ip_mac
+                    self.textctrl_show_ipmac.SetValue(content)
+                else:
+                    self.textctrl_show_ipmac.SetValue('No result match! Please check the input!')
 
     def viewip(self, event):
         self.button_viewall.Disable()
         self.textctrl_show_ipmac.Clear()
-        ipdict = self.mac2ip()
+        ipdict, output_nothing = self.mac2ip()
         keys_ipmac = ipdict.keys()
         keys_ipmac.sort()
         ipstring = ''
@@ -548,8 +567,6 @@ class PXEframe(wx.Frame):
         dlg = wx.MessageDialog(None, message, "ERROR BOX", wx.OK | wx.ICON_ERROR | wx.STAY_ON_TOP)
         if dlg.ShowModal() == wx.ID_OK:
             dlg.Destroy()
-
-
 
 
 if __name__ == '__main__':
