@@ -361,8 +361,8 @@ class PXEframe(wx.Frame):
                         ipaddr = re.findall('lease (\d+.\d+.\d+.\d+) ', each)[0]
                         macaddr = re.findall('ethernet (.+?);', each)[0]
                         macaddr = re.sub(r':', '-', macaddr)
-                        clientDic_ip_mac[ipaddr] = macaddr
-                        clientDic_mac_ip[macaddr] = ipaddr
+                        clientDic_ip_mac[ipaddr] = macaddr.upper()
+                        clientDic_mac_ip[macaddr.upper()] = ipaddr
             except IOError:
                 self.message_error("DHCP服务器信息下载失败！请检查网络连接！".decode('gbk'))
         except paramiko.ssh_exception.SSHException:
@@ -380,7 +380,7 @@ class PXEframe(wx.Frame):
         elif os_version == 'CentOS':
             relist = ['6.4', '6.5', '6.6', '6.7', '6.8', '6.9', '7.0', '7.1', '7.2', '7.3']
         elif os_version == 'SUSE':
-            relist = ['11.1', '11.2', '11.3', '12.0', '12.1', '12.2']
+            relist = ['11.1', '11.2', '11.3', '11.4', '12.0', '12.1', '12.2']
         elif os_version == 'Ubuntu':
             relist = ['12.04', '14.04', '16.04']
         else:
@@ -391,7 +391,7 @@ class PXEframe(wx.Frame):
         os_version_temp = self.combo_os_version.GetValue().strip()
         os_version = os_version_temp.lower()
         os_sub_version = self.combox_os_sub_version.GetValue().strip()
-        mac_net_pxe = self.textctrl_write_mac.GetValue().strip().lower()
+        mac_net_pxe = self.textctrl_write_mac.GetValue().strip().upper()
         bios_mode_temp = self.combox_bios_mode.GetValue().strip()
         bios_mode = bios_mode_temp.lower()
         os_bit = self.combox_os_bit.GetValue().strip()
@@ -488,30 +488,31 @@ class PXEframe(wx.Frame):
                             #generate menu
                             file_ks = open(local_path_menu, mode='w')
                             if os_version == "redhat" or os_version == "centos":
-                                file_ks.write("timeout 1" + os.linesep)
-                                file_ks.write("default %s%s-%s_%s" % (os_version, os_sub_version_max, os_sub_version_min, os_bit) + os.linesep)
-                                file_ks.write("label %s%s-%s_%s" % (os_version, os_sub_version_max, os_sub_version_min, os_bit) + os.linesep)
                                 if bios_mode == "legacy":
-                                    file_ks.write("kernel images/%s/%s%s-%s_%s/vmlinuz" % (os_version, os_version,os_sub_version_max, os_sub_version_min, os_bit) + os.linesep)
-                                elif bios_mode == "uefi":
-                                    file_ks.write("kernel ../images/%s/%s%s-%s_%s/vmlinuz" % (os_version, os_version, os_sub_version_max, os_sub_version_min, os_bit) + os.linesep)
-
-                                if os_sub_version_max == "7":
-                                    if os_sub_version_min == "3":
-                                        if bios_mode == "legacy":
-                                            file_ks.write("append initrd=images/%s/%s%s-%s_%s/initrd.img modprobe.blacklist=qat_c62x inst.ks=http://%s/ks/ks_all/%s.cfg" % (os_version, os_version,os_sub_version_max, os_sub_version_min, os_bit, ipaddress_dhcp, mac_net_pxe) + os.linesep)
-                                        elif bios_mode =="uefi":
-                                            file_ks.write("append initrd=../images/%s/%s%s-%s_%s/initrd.img modprobe.blacklist=qat_c62x inst.ks=http://%s/ks/ks_all/%s.cfg" % (os_version, os_version, os_sub_version_max, os_sub_version_min, os_bit, ipaddress_dhcp, mac_net_pxe) + os.linesep)
-                                    else:
-                                        if bios_mode == "legacy":
-                                            file_ks.write("append initrd=images/%s/%s%s-%s_%s/initrd.img modprobe.blacklist=qat_c62x inst.ks=http://%s/ks/ks_all/%s.cfg" % (os_version, os_version, os_sub_version_max, os_sub_version_min, os_bit, ipaddress_dhcp, mac_net_pxe) + os.linesep)
-                                        elif bios_mode == "uefi":
-                                            file_ks.write("append initrd=images/%s/%s%s-%s_%s/initrd.img modprobe.blacklist=qat_c62x inst.ks=http://%s/ks/ks_all/%s.cfg" % (os_version, os_version, os_sub_version_max, os_sub_version_min, os_bit, ipaddress_dhcp, mac_net_pxe) + os.linesep)
-                                elif os_sub_version_max == "6":
-                                    if bios_mode == "legacy":
+                                    file_ks.write("timeout 1" + os.linesep)
+                                    file_ks.write("default %s%s-%s_%s" % (os_version, os_sub_version_max, os_sub_version_min, os_bit) + os.linesep)
+                                    file_ks.write("label %s%s-%s_%s" % (os_version, os_sub_version_max, os_sub_version_min, os_bit) + os.linesep)
+                                    file_ks.write("menu label %s%s-%s_%s" % (os_version, os_sub_version_max, os_sub_version_min, os_bit) + os.linesep)
+                                    file_ks.write("kernel images/%s/%s%s-%s_%s/vmlinuz" % (os_version, os_version, os_sub_version_max, os_sub_version_min, os_bit) + os.linesep)
+                                    if os_sub_version_max == "7":
+                                        file_ks.write("append initrd=images/%s/%s%s-%s_%s/initrd.img modprobe.blacklist=qat_c62x inst.ks=http://%s/ks/ks_all/%s.cfg" % (os_version, os_version, os_sub_version_max, os_sub_version_min, os_bit, ipaddress_dhcp, mac_net_pxe) + os.linesep)
+                                    elif os_sub_version_max == "6":
                                         file_ks.write("append initrd=images/%s/%s%s-%s_%s/initrd.img ks=http://%s/ks/ks_all/%s.cfg ksdevice=eth0" % (os_version, os_version, os_sub_version_max, os_sub_version_min, os_bit, ipaddress_dhcp, mac_net_pxe) + os.linesep)
-                                    elif bios_mode == "uefi":
-                                        file_ks.write("append initrd=../images/%s/%s%s-%s_%s/initrd.img ks=http://%s/ks/ks_all/%s.cfg ksdevice=eth0" % (os_version, os_version, os_sub_version_max, os_sub_version_min, os_bit, ipaddress_dhcp, mac_net_pxe) + os.linesep)
+                                elif bios_mode == "uefi":
+                                    file_ks.write("default=%s%s-%s_%s" % (os_version, os_sub_version_max, os_sub_version_min, os_bit) + os.linesep)
+                                    file_ks.write("timeout=0" + os.linesep)
+                                    file_ks.write("title %s%s-%s_%s" % (os_version, os_sub_version_max, os_sub_version_min, os_bit) + os.linesep)
+                                    file_ks.write("root (nd)" + os.linesep)
+                                    #file_ks.write("kernel /images/%s/%s%s-%s_%s/vmlinuz" % (os_version, os_version,os_sub_version_max, os_sub_version_min, os_bit) + os.linesep)
+                                    if os_sub_version_max == "7":
+                                        file_ks.write("kernel /images/%s/%s%s-%s_%s/vmlinuz modprobe.blacklist=qat_c62x inst.ks=http://%s/ks/ks_all/%s.cfg" % (os_version, os_version, os_sub_version_max, os_sub_version_min, os_bit, ipaddress_dhcp, mac_net_pxe) + os.linesep)
+                                    elif os_sub_version_max == "6":
+                                        file_ks.write("kernel /images/%s/%s%s-%s_%s/vmlinuz ks=http://%s/ks/ks_all/%s.cfg" % (os_version, os_version, os_sub_version_max, os_sub_version_min, os_bit, ipaddress_dhcp, mac_net_pxe) + os.linesep)
+                                    file_ks.write("initrd=/images/%s/%s%s-%s_%s/initrd.img" % (os_version, os_version, os_sub_version_max, os_sub_version_min, os_bit) + os.linesep)
+                                    #if os_sub_version_max == "7":
+                                        #file_ks.write("initrd=/images/%s/%s%s-%s_%s/initrd.img modprobe.blacklist=qat_c62x inst.ks=http://%s/ks/ks_all/%s.cfg" % (os_version, os_version, os_sub_version_max, os_sub_version_min, os_bit, ipaddress_dhcp, mac_net_pxe) + os.linesep)
+                                    #elif os_sub_version_max == "6":
+                                        #file_ks.write("initrd=/images/%s/%s%s-%s_%s/initrd.img ks=http://%s/ks/ks_all/%s.cfg ksdevice=eth0" % (os_version, os_version, os_sub_version_max, os_sub_version_min, os_bit, ipaddress_dhcp, mac_net_pxe) + os.linesep)
                             else:
                                 pass
                             file_ks.close()
@@ -523,7 +524,7 @@ class PXEframe(wx.Frame):
                                     if bios_mode == "legacy":
                                         remote_path_menu = os.path.join(r'/tftpboot/pxelinux.cfg/', filename_menu_to_gen)
                                     elif bios_mode == "uefi":
-                                        remote_path_menu = os.path.join(r'/tftpboot/efilinux/pxelinux.cfg/', filename_menu_to_gen)
+                                        remote_path_menu = os.path.join(r'/tftpboot/efilinux/', filename_menu_to_gen)
                                     upload_menu = paramiko.Transport('%s:22' % ipaddress_dhcp)
                                     upload_menu.connect(username=username_dhcp, password=password_dhcp)
                                     sftp_upload_ks = paramiko.SFTPClient.from_transport(upload_menu)
@@ -560,7 +561,7 @@ class PXEframe(wx.Frame):
                     ssh_del_ks.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                     ssh_del_ks.connect(ipaddress_dhcp, 22, username=username_dhcp, password=password_dhcp)
                     if bios_mode == "UEFI":
-                        ssh_del_ks.exec_command(command='rm -rf /tftpboot/efilinux/pxelinux.cfg/%s' % filename_menu_to_del)
+                        ssh_del_ks.exec_command(command='rm -rf /tftpboot/efilinux/%s' % filename_menu_to_del)
                     elif bios_mode == "LEGACY":
                         ssh_del_ks.exec_command(command='rm -rf /tftpboot/pxelinux.cfg/%s' % filename_menu_to_del)
                     ssh_del_ks.exec_command(command='rm -rf /var/www/html/ks/ks_all/%s' % filename_ks)
@@ -643,7 +644,7 @@ class PXEframe(wx.Frame):
 
 
 if __name__ == '__main__':
-    ipaddress_dhcp = "100.2.36.153"
+    ipaddress_dhcp = "10.0.0.1"
     username_dhcp = "root"
     password_dhcp = "111111"
     app = wx.App()
