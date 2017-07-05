@@ -380,14 +380,15 @@ class PXEframe(wx.Frame):
         elif os_version == 'CentOS':
             relist = ['6.4', '6.5', '6.6', '6.7', '6.8', '6.9', '7.0', '7.1', '7.2', '7.3']
         elif os_version == 'SUSE':
-            relist = ['11.1', '11.2', '11.3', '11.4', '12.0', '12.1', '12.2']
+            relist = ['11.2', '11.3', '11.4', '12.0', '12.1', '12.2']
         elif os_version == 'Ubuntu':
-            relist = ['12.04', '14.04', '16.04']
+            relist = ['14.04.5', '16.04', '16.10', '17.04']
         else:
             relist = ['Not Supported']
         self.combox_os_sub_version.Set(relist)
 
-    def generate_menu_redhat(self, os_version_sub, os_sub_version_max_sub, os_sub_version_min_sub, os_bit_sub, bios_mode_sub, ipaddress_dhcp_sub, mac_net_pxe_sub, mac_boot_device_rhel6_sub):
+    @staticmethod
+    def generate_menu_redhat(os_version_sub, os_sub_version_max_sub, os_sub_version_min_sub, os_bit_sub, bios_mode_sub, ipaddress_dhcp_sub, mac_net_pxe_sub, mac_boot_device_rhel6_sub):
         string_to_write = []
         if bios_mode_sub == "legacy":
             string_to_write.append("timeout 1" + os.linesep)
@@ -408,13 +409,13 @@ class PXEframe(wx.Frame):
                     os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub) + os.linesep)
             if os_sub_version_max_sub == "7":
                 string_to_write.append(
-                    "append initrd=images/{os_version}/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/initrd.img modprobe.blacklist=qat_c62x inst.ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg".format(
+                    "append initrd=images/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/initrd.img modprobe.blacklist=qat_c62x inst.ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg".format(
                         os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                         os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub, ipaddress_dhcp=ipaddress_dhcp_sub,
                         mac_net_pxe=mac_net_pxe_sub) + os.linesep)
             elif os_sub_version_max_sub == "6":
                 string_to_write.append(
-                    "append initrd=images/{os_version}/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/initrd.img ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg ksdevice={mac_boot_device_rhel6}".format(
+                    "append initrd=images/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/initrd.img ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg ksdevice={mac_boot_device_rhel6}".format(
                         os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                         os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub, ipaddress_dhcp=ipaddress_dhcp_sub,
                         mac_net_pxe=mac_net_pxe_sub, mac_boot_device_rhel6=mac_boot_device_rhel6_sub) + os.linesep)
@@ -431,24 +432,24 @@ class PXEframe(wx.Frame):
             string_to_write.append("root (nd)" + os.linesep)
             if os_sub_version_max_sub == "7":
                 string_to_write.append(
-                    "kernel /images/{os_version}/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz modprobe.blacklist=qat_c62x inst.ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg".format(
+                    "kernel /images/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz modprobe.blacklist=qat_c62x inst.ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg".format(
                         os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                         os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub, ipaddress_dhcp=ipaddress_dhcp_sub,
                         mac_net_pxe=mac_net_pxe_sub) + os.linesep)
             elif os_sub_version_max_sub == "6":
                 string_to_write.append(
-                    "kernel /images/{os_version}/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg ksdevice={mac_boot_device_rhel6}".format(
+                    "kernel /images/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg ksdevice={mac_boot_device_rhel6}".format(
                         os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                         os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub, ipaddress_dhcp=ipaddress_dhcp_sub,
                         mac_net_pxe=mac_net_pxe_sub, mac_boot_device_rhel6=mac_boot_device_rhel6_sub) + os.linesep)
             string_to_write.append(
-                "initrd=/images/{os_version}/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/initrd.img".format(
+                "initrd=/images/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/initrd.img".format(
                     os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                     os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub) + os.linesep)
         return string_to_write
 
-
-    def generate_menu_suse(self, os_version_sub, os_sub_version_max_sub, os_sub_version_min_sub, os_bit_sub, bios_mode_sub, ipaddress_dhcp_sub, mac_net_pxe_sub):
+    @staticmethod
+    def generate_menu_suse(os_version_sub, os_sub_version_max_sub, os_sub_version_min_sub, os_bit_sub, bios_mode_sub, ipaddress_dhcp_sub, mac_net_pxe_sub):
         string_to_write = []
         if bios_mode_sub == "legacy":
             string_to_write.append("timeout 1" + os.linesep)
@@ -464,11 +465,11 @@ class PXEframe(wx.Frame):
                 os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                 os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub) + os.linesep)
             string_to_write.append(
-                "kernel images/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/linux splash=silent showopts".format(
+                "kernel images/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/linux splash=silent showopts edd=off".format(
                     os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                     os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub) + os.linesep)
             string_to_write.append(
-                "append initrd=images/{os_version}/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/initrd install=http://{ipaddress_dhcp}/iso/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit} autoyast=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.xml".format(
+                "append initrd=images/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/initrd install=http://{ipaddress_dhcp}/iso/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit} autoyast=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.xml".format(
                     os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                     os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub, ipaddress_dhcp=ipaddress_dhcp_sub,
                     mac_net_pxe=mac_net_pxe_sub) + os.linesep)
@@ -493,13 +494,53 @@ class PXEframe(wx.Frame):
                     os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub) + os.linesep)
         return string_to_write
 
+    @staticmethod
+    def generate_menu_ubuntu(os_version_sub, os_string_version_sub, os_bit_sub, bios_mode_sub, ipaddress_dhcp_sub, mac_net_pxe_sub, mac_boot_device_rhel6_sub):
+        string_to_write = []
+        if bios_mode_sub == "legacy":
+            string_to_write.append("timeout 1" + os.linesep)
+            string_to_write.append("default {os_version}{os_string_version}_{os_bit}".format(os_version=os_version_sub,
+                                                                                             os_string_version=os_string_version_sub,
+                                                                                             os_bit=os_bit_sub) + os.linesep)
+            string_to_write.append("label {os_version}{os_string_version}_{os_bit}".format(os_version=os_version_sub,
+                                                                                           os_string_version=os_string_version_sub,
+                                                                                           os_bit=os_bit_sub) + os.linesep)
+            string_to_write.append(
+                "menu label {os_version}{os_string_version}_{os_bit}".format(os_version=os_version_sub,
+                                                                             os_string_version=os_string_version_sub,
+                                                                             os_bit=os_bit_sub) + os.linesep)
+            string_to_write.append("kernel images/{os_version}/{os_version}{os_string_version}_{os_bit}/linux".format(
+                os_version=os_version_sub, os_string_version=os_string_version_sub, os_bit=os_bit_sub) + os.linesep)
+            string_to_write.append(
+                "append initrd=images/{os_version}/{os_version}{os_string_version}_{os_bit}/initrd.gz devfs-nomount ramdisksize=16384 vga=normal url=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg netcfg/get_nameservers={ipaddress_dhcp} ks=http://{ipaddress_dhcp}/ks/ks_template/{os_version}/{bios_mode}/{os_version}{os_string_version}_{os_bit}-{bios_mode}.cfg ksdevice={mac_boot_device_rhel6}".format(
+                    os_version=os_version_sub, os_string_version=os_string_version_sub, os_bit=os_bit_sub,
+                    ipaddress_dhcp=ipaddress_dhcp_sub, bios_mode=bios_mode_sub, mac_net_pxe=mac_net_pxe_sub,
+                    mac_boot_device_rhel6=mac_boot_device_rhel6_sub) + os.linesep)
+        elif bios_mode_sub == "uefi":
+            string_to_write.append("default={os_version}{os_string_version}_{os_bit}".format(os_version=os_version_sub,
+                                                                                             os_string_version=os_string_version_sub,
+                                                                                             os_bit=os_bit_sub) + os.linesep)
+            string_to_write.append("timeout=0" + os.linesep)
+            string_to_write.append("title {os_version}{os_string_version}_{os_bit}".format(os_version=os_version_sub,
+                                                                                           os_string_version=os_string_version_sub,
+                                                                                           os_bit=os_bit_sub) + os.linesep)
+            string_to_write.append("root (nd)" + os.linesep)
+            string_to_write.append(
+                "kernel /images/{os_version}/{os_version}{os_string_version}_{os_bit}/linux devfs-nomount ramdisksize=16384 vga=normal url=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg netcfg/get_nameservers={ipaddress_dhcp} ks=http://{ipaddress_dhcp}/ks/ks_template/{os_version}/{bios_mode}/{os_version}{os_string_version}_{os_bit}-{bios_mode}.cfg ksdevice={mac_boot_device_rhel6}".format(
+                    os_version=os_version_sub, os_string_version=os_string_version_sub, os_bit=os_bit_sub,
+                    ipaddress_dhcp=ipaddress_dhcp_sub, bios_mode=bios_mode_sub, mac_net_pxe=mac_net_pxe_sub,
+                    mac_boot_device_rhel6=mac_boot_device_rhel6_sub) + os.linesep)
+            string_to_write.append(
+                "initrd=/images/{os_version}/{os_version}{os_string_version}_{os_bit}/initrd.gz".format(
+                    os_version=os_version_sub, os_string_version=os_string_version_sub, os_bit=os_bit_sub) + os.linesep)
+        return string_to_write
+
     def generate_ks(self, event):
         os_version_temp = self.combo_os_version.GetValue().strip()
         os_version = os_version_temp.lower()
         os_sub_version = self.combox_os_sub_version.GetValue().strip()
         mac_net_pxe_temp = self.textctrl_write_mac.GetValue().strip()
-        mac_net_pxe = mac_net_pxe_temp.upper()
-        mac_boot_device_rhel6 = re.sub(r'-', ':', mac_net_pxe.lower())
+        mac_boot_device_rhel6 = re.sub(r'-', ':', mac_net_pxe_temp.lower())
         bios_mode_temp = self.combox_bios_mode.GetValue().strip()
         bios_mode = bios_mode_temp.lower()
         os_bit = self.combox_os_bit.GetValue().strip()
@@ -514,7 +555,7 @@ class PXEframe(wx.Frame):
                 self.message_error("操作系统小版本未选择".decode('gbk'))
                 flag_ks_status = 0
             else:
-                if len(mac_net_pxe) == 0:
+                if len(mac_net_pxe_temp) == 0:
                     self.message_error("MAC地址未输入！请重新刷入！".decode('gbk'))
                     flag_ks_status = 0
                 else:
@@ -526,21 +567,30 @@ class PXEframe(wx.Frame):
                             self.message_error("OS的位数未选择！请选择！".decode('gbk'))
                         else:
                             flag_ks_local_exists = 0
+                            mac_net_pxe = ''
+                            if bios_mode == "legacy":
+                                mac_net_pxe = mac_net_pxe_temp.lower()
+                            elif bios_mode == "uefi":
+                                mac_net_pxe = mac_net_pxe_temp.upper()
                             filename_menu_to_gen = "01-" + mac_net_pxe
                             os_sub_version_max = os_sub_version.split(".")[0]
+                            #redhat and centos and suse:16.04; ubuntu :16.04-2
                             os_sub_version_min = os_sub_version.split(".")[1]
+                            os_string_version = "-".join(os_sub_version.split("."))
                             filename_ks_template = ''
                             if os_version == "redhat" or os_version == "centos":
-                                filename_ks_template = "%s%s-%s_%s.cfg" % (os_version, os_sub_version_max, os_sub_version_min, os_bit)
+                                filename_ks_template = "%s%s_%s-%s.cfg" % (os_version, os_string_version, os_bit, bios_mode)
                             elif os_version == "suse":
-                                filename_ks_template = "%s%s-%s_%s.xml" % (os_version, os_sub_version_max, os_sub_version_min, os_bit)
+                                filename_ks_template = "%s%s_%s-%s.xml" % (os_version, os_string_version, os_bit, bios_mode)
+                            elif os_version == "ubuntu":
+                                filename_ks_template = "preseed-%s%s_%s-%s.cfg" % (os_version, os_string_version, os_bit, bios_mode)
                             else:
                                 pass
                             remote_path_dir_ks_template = r'/var/www/html/ks/ks_template/%s/%s/' % (os_version, bios_mode)
                             remote_path_ks_template = os.path.join(remote_path_dir_ks_template, filename_ks_template)
 
-                            filename_ks_local_rhel = "%s.cfg" % (mac_net_pxe)
-                            filename_ks_local_suse = "%s.xml" % (mac_net_pxe)
+                            filename_ks_local_rhel = "%s.cfg" % (mac_net_pxe_temp)
+                            filename_ks_local_suse = "%s.xml" % (mac_net_pxe_temp)
 
                             local_path_ks = os.path.join(os.getcwd(), filename_ks_local_rhel)
                             remote_path_ks = r'/var/www/html/ks/ks_all/'
@@ -598,14 +648,33 @@ class PXEframe(wx.Frame):
                                     handler_ks.write("%end")
                                     handler_pre.close()
                                     handler_ks.close()
+                                elif os_version == "ubuntu":
+                                    if len(os_disk) != 0:
+                                        handler_ks_change = open(local_path_ks, mode='rb')
+                                        pattern_os_disk = re.compile(r'/dev/sda')
+                                        string_pre = ''
+                                        for item_data_pre in handler_ks_change:
+                                            if re.search(pattern_os_disk, item_data_pre):
+                                                item_data_pre = re.sub(pattern_os_disk, "/dev/%s" % os_disk, item_data_pre)
+                                                string_pre += item_data_pre
+                                            else:
+                                                string_pre += item_data_pre
+                                        handler_ks_change.close()
+                                        handler_ks_change = open(local_path_ks, mode='wb')
+                                        handler_ks_change.write(string_pre)
+                                        handler_ks_change.close()
+                                else:
+                                    pass
 
                             #generate_menu
                             with open(local_path_menu, mode='wb') as file_menu:
                                 data_menu = []
                                 if os_version == "redhat" or os_version == "centos":
-                                    data_menu = self.generate_menu_redhat(os_version, os_sub_version_max, os_sub_version_min, os_bit, bios_mode, ipaddress_dhcp, mac_net_pxe, mac_boot_device_rhel6)
+                                    data_menu = self.generate_menu_redhat(os_version, os_sub_version_max, os_sub_version_min, os_bit, bios_mode, ipaddress_dhcp, mac_net_pxe_temp, mac_boot_device_rhel6)
                                 elif os_version == "suse":
-                                    data_menu = self.generate_menu_suse(os_version, os_sub_version_max, os_sub_version_min, os_bit, bios_mode, ipaddress_dhcp, mac_net_pxe)
+                                    data_menu = self.generate_menu_suse(os_version, os_sub_version_max, os_sub_version_min, os_bit, bios_mode, ipaddress_dhcp, mac_net_pxe_temp)
+                                elif os_version == "ubuntu":
+                                    data_menu = self.generate_menu_ubuntu(os_version, os_string_version, os_bit, bios_mode, ipaddress_dhcp, mac_net_pxe_temp, mac_boot_device_rhel6)
                                 else:
                                     pass
                                 file_menu.writelines(data_menu)
@@ -624,7 +693,7 @@ class PXEframe(wx.Frame):
                                     #upload_menu
                                     sftp_upload_ks.put(localpath=local_path_menu, remotepath=remote_path_menu)
                                     #uplaod_ks
-                                    if os_version == "redhat" or os_version == "centos":
+                                    if os_version == "redhat" or os_version == "centos" or os_version == "ubuntu":
                                         sftp_upload_ks.put(localpath=local_path_ks, remotepath=os.path.join(remote_path_ks, filename_ks_local_rhel))
                                     elif os_version == "suse":
                                         sftp_upload_ks.put(localpath=local_path_ks, remotepath=os.path.join(remote_path_ks, filename_ks_local_suse))
@@ -639,29 +708,28 @@ class PXEframe(wx.Frame):
                                     self.message_error("无法连接至DHCP服务器，请检查网络连接！".decode('gbk'))
 
     def delete_ks(self, event):
-        bios_mode = self.combox_bios_mode.GetValue().strip()
+        bios_mode = self.combox_bios_mode.GetValue().strip().lower()
         os_bit = self.combox_os_bit.GetValue().strip()
         os_sub_version = self.combox_os_sub_version.GetValue().strip()
         os_version_temp = self.combo_os_version.GetValue().strip()
         os_version = os_version_temp.lower()
-        mac_net_pxe = self.textctrl_write_mac.GetValue().strip().upper()
-        filename_menu_to_del = "01-" + mac_net_pxe
+        mac_net_pxe_temp = self.textctrl_write_mac.GetValue().strip()
         if len(bios_mode) == 0:
             self.message_error("BIOS模式未选择，请选择！".decode('gbk'))
         else:
-            if len(mac_net_pxe) == 0:
+            if len(mac_net_pxe_temp) == 0:
                 self.message_error("MAC地址未输入，请输入！".decode('gbk'))
             else:
-                filename_ks = "%s.*" % mac_net_pxe
-                filename_ks_suse = "%s.xml" % mac_net_pxe
+                filename_ks = "%s.*" % mac_net_pxe_temp
+                # filename_ks_suse = "%s.xml" % mac_net_pxe
                 try:
                     ssh_del_ks = paramiko.SSHClient()
                     ssh_del_ks.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                     ssh_del_ks.connect(ipaddress_dhcp, 22, username=username_dhcp, password=password_dhcp)
-                    if bios_mode == "UEFI":
-                        ssh_del_ks.exec_command(command='rm -rf /tftpboot/efilinux/%s' % filename_menu_to_del)
-                    elif bios_mode == "LEGACY":
-                        ssh_del_ks.exec_command(command='rm -rf /tftpboot/pxelinux.cfg/%s' % filename_menu_to_del)
+                    if bios_mode == "uefi":
+                        ssh_del_ks.exec_command(command='rm -rf /tftpboot/efilinux/%s' % ("01-" + mac_net_pxe_temp.upper()))
+                    elif bios_mode == "legacy":
+                        ssh_del_ks.exec_command(command='rm -rf /tftpboot/pxelinux.cfg/%s' % ("01-" + mac_net_pxe_temp.lower()))
                     ssh_del_ks.exec_command(command='rm -rf /var/www/html/ks/ks_all/%s' % filename_ks)
                     ssh_del_ks.close()
                     self.message_ok("KS文件从服务器删除成功！".decode('gbk'))
@@ -742,7 +810,7 @@ class PXEframe(wx.Frame):
 
 
 if __name__ == '__main__':
-    ipaddress_dhcp = "10.0.0.1"
+    ipaddress_dhcp = "100.2.36.153"
     username_dhcp = "root"
     password_dhcp = "111111"
     app = wx.App()
