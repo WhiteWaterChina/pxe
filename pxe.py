@@ -317,8 +317,6 @@ class PXEframe(wx.Frame):
         self.button_search.Bind(wx.EVT_BUTTON, self.searchip)
         self.button_viewall.Bind(wx.EVT_BUTTON, self.viewip)
 
-
-
     def __del__(self):
         pass
 
@@ -384,7 +382,7 @@ class PXEframe(wx.Frame):
             elif os_version == 'suse':
                 relist = ['11.2', '11.3', '11.4', '12.0', '12.1', '12.2']
             elif os_version == 'ubuntu':
-                relist = ['14.04.5', '16.04', '16.10', '17.04']
+                relist = ['14.04.5', '16.10', '17.04']
             elif os_version == 'windows':
                 relist = ['2016-datacenter-cn', '2016-datacenter-en', '2016-standard-en', '2016-standard-cn', '2012r2-standard-cn', '2012r2-standard-cn', '2012r2-standard-cn', '2012r2-standard-cn']
             else:
@@ -1096,7 +1094,7 @@ if __name__ == '__main__':
     ipaddress_dhcp = "100.2.36.2"
     ipaddress_windows = '100.2.38.14'
     username_dhcp = "root"
-    password_dhcp = "lijianbo"
+    password_dhcp = "Testing"
     app = wx.App()
     frame = PXEframe(None)
     frame.Show()
