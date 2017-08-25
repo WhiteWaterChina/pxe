@@ -376,7 +376,7 @@ class PXEframe(wx.Frame):
             self.message_error("«Î—°‘ÒOS¿‡–Õ".decode('gbk'))
         else:
             if os_version == 'redhat':
-                relist = ['6.4', '6.5', '6.6', '6.7', '6.8', '6.9', '7.0', '7.1', '7.2', '7.3']
+                relist = ['6.4', '6.5', '6.6', '6.7', '6.8', '6.9', '7.0', '7.1', '7.2', '7.3', '7.4']
             elif os_version == 'centos':
                 relist = ['6.4', '6.5', '6.6', '6.7', '6.8', '6.9', '7.0', '7.1', '7.2', '7.3']
             elif os_version == 'suse':
