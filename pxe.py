@@ -378,11 +378,11 @@ class PXEframe(wx.Frame):
             if os_version == 'redhat':
                 relist = ['6.4', '6.5', '6.6', '6.7', '6.8', '6.9', '7.0', '7.1', '7.2', '7.3', '7.4']
             elif os_version == 'centos':
-                relist = ['6.4', '6.5', '6.6', '6.7', '6.8', '6.9', '7.0', '7.1', '7.2', '7.3']
+                relist = ['6.4', '6.5', '6.6', '6.7', '6.8', '6.9', '7.0', '7.1', '7.2', '7.3', '7.4']
             elif os_version == 'suse':
-                relist = ['11.2', '11.3', '11.4', '12.0', '12.1', '12.2']
+                relist = ['11.2', '11.3', '11.4', '12.0', '12.1', '12.2', '12.3']
             elif os_version == 'ubuntu':
-                relist = ['14.04.5', '16.10', '17.04']
+                relist = ['14.04.5', '16.10', '17.04', '17.10']
             elif os_version == 'windows':
                 relist = ['2016-datacenter-cn', '2016-datacenter-en', '2016-standard-en', '2016-standard-cn', '2012r2-standard-cn', '2012r2-standard-cn', '2012r2-standard-cn', '2012r2-standard-cn']
             else:
@@ -397,13 +397,13 @@ class PXEframe(wx.Frame):
             string_to_write.append("set timeout=1" + os.linesep)
             if os_sub_version_max_sub == "7":
                 string_to_write.append(
-                    "kernel http://{ipaddress_dhcp}/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz initrd=initrd.img initrd=initrd.imgmodprobe.blacklist=qat_c62x inst.ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg".format(
+                    "kernel http://{ipaddress_dhcp}/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz initrd=initrd.img initrd=initrd.img modprobe.blacklist=qat_c62x ip=dhcp inst.ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg".format(
                         os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                         os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub, ipaddress_dhcp=ipaddress_dhcp_sub,
                         mac_net_pxe=mac_net_pxe_sub) + os.linesep)
             elif os_sub_version_max_sub == "6":
                 string_to_write.append(
-                    "kernel http://{ipaddress_dhcp}/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz initrd=initrd.img ramdisk_size=8192 ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg ksdevice={mac_boot_device_rhel6}".format(
+                    "kernel http://{ipaddress_dhcp}/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz initrd=initrd.img ramdisk_size=8192 ip=dhcp ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg ksdevice={mac_boot_device_rhel6}".format(
                         os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                         os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub, ipaddress_dhcp=ipaddress_dhcp_sub,
                         mac_net_pxe=mac_net_pxe_sub, mac_boot_device_rhel6=mac_boot_device_rhel6_sub) + os.linesep)
@@ -440,12 +440,12 @@ class PXEframe(wx.Frame):
             string_to_write.append("net_add_addr eno14 efinet14 100.2.36.19" + os.linesep)
             if os_sub_version_max_sub == "7":
                 string_to_write.append(
-                    "linux (http)/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz modprobe.blacklist=qat_c62x inst.ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg".format(
+                    "linux (http)/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz modprobe.blacklist=qat_c62x ip=dhcp inst.ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg".format(
                         os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                         os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub, ipaddress_dhcp=ipaddress_dhcp_sub,
                         mac_net_pxe=mac_net_pxe_sub) + os.linesep)
             elif os_sub_version_max_sub == "6":
-                string_to_write.append("linux (http)/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg ksdevice={mac_boot_device_rhel6}".format(
+                string_to_write.append("linux (http)/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz ip=dhcp ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg ksdevice={mac_boot_device_rhel6}".format(
                         os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                         os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub, ipaddress_dhcp=ipaddress_dhcp_sub,
                         mac_net_pxe=mac_net_pxe_sub, mac_boot_device_rhel6=mac_boot_device_rhel6_sub) + os.linesep)
@@ -463,7 +463,7 @@ class PXEframe(wx.Frame):
             string_to_write.append("#!ipxe" + os.linesep)
             string_to_write.append("set timeout=1" + os.linesep)
             string_to_write.append(
-                "kernel http://{ipaddress_dhcp}/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/linux initrd=initrd splash=silent showopts edd=off  install=http://100.2.36.3/iso/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit} autoyast=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.xml".format(
+                "kernel http://{ipaddress_dhcp}/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/linux initrd=initrd splash=silent showopts edd=off  install=http://{ipaddress_dhcp}/iso/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit} autoyast2=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.xml".format(
                     os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,ipaddress_dhcp=ipaddress_dhcp_sub, os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub, mac_net_pxe=mac_net_pxe_sub) + os.linesep)
             string_to_write.append(
                 "initrd http://{ipaddress_dhcp}/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/initrd".format(
@@ -496,7 +496,7 @@ class PXEframe(wx.Frame):
             string_to_write.append("net_add_addr eno13 efinet13 100.2.36.18" + os.linesep)
             string_to_write.append("net_add_addr eno14 efinet14 100.2.36.19" + os.linesep)
             string_to_write.append(
-                "linux (http)/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/linux splash=silent showopts install=http://{ipaddress_dhcp}/iso/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit} autoyast=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.xml".format(
+                "linux (http)/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/linux splash=silent showopts install=http://{ipaddress_dhcp}/iso/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit} autoyast2=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.xml".format(
                     os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                     os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub, ipaddress_dhcp=ipaddress_dhcp_sub,
                     mac_net_pxe=mac_net_pxe_sub) + os.linesep)
