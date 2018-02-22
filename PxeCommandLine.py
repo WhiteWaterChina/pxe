@@ -17,7 +17,7 @@ import sys
 2.BIOS模式（legacy还是uefi）
 3.MAC地址（格式为6C-92-BF-11-22-33)
 4.OS版本.。redhat/centos/ubuntu/windows/suse
-5.OS小版本。redhat和centos必须为6.4到7.2；suse必须为11.2-12.2；ubuntu必须为14.04.5,16.10，17.04；windows必须为'2016-datacenter-cn', '2016-datacenter-en', '2016-standard-en', '2016-standard-cn', '2012r2-standard-cn', '2012r2-standard-cn', '2012r2-standard-cn', '2012r2-standard-cn'
+5.OS小版本。redhat和centos必须为6.4到7.2；suse必须为11.2-12.3；ubuntu必须为14.04.5,16.10，17.04，17.10；windows必须为'2016-datacenter-cn', '2016-datacenter-en', '2016-standard-en', '2016-standard-cn', '2012r2-standard-cn', '2012r2-standard-cn', '2012r2-standard-cn', '2012r2-standard-cn'
 6.OS位数（64）
 7.系统盘盘符,从sda/nvme0n1/sdb/sdc/sdd/sde/sdf/sdg依次排序选一个
 8.BMC IP地址
@@ -49,13 +49,13 @@ def generate_menu_redhat(os_version_sub, os_sub_version_max_sub, os_sub_version_
         string_to_write.append("set timeout=1" + os.linesep)
         if os_sub_version_max_sub == "7":
             string_to_write.append(
-                "kernel http://{ipaddress_dhcp}/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz initrd=initrd.img initrd=initrd.imgmodprobe.blacklist=qat_c62x inst.ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg".format(
+                "kernel http://{ipaddress_dhcp}/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz initrd=initrd.img initrd=initrd.img modprobe.blacklist=qat_c62x ip=dhcp inst.ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg".format(
                     os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                     os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub, ipaddress_dhcp=ipaddress_dhcp_sub,
                     mac_net_pxe=mac_net_pxe_sub) + os.linesep)
         elif os_sub_version_max_sub == "6":
             string_to_write.append(
-                "kernel http://{ipaddress_dhcp}/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz initrd=initrd.img ramdisk_size=8192 ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg ksdevice={mac_boot_device_rhel6}".format(
+                "kernel http://{ipaddress_dhcp}/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz initrd=initrd.img ramdisk_size=8192 ip=dhcp ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg ksdevice={mac_boot_device_rhel6}".format(
                     os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                     os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub, ipaddress_dhcp=ipaddress_dhcp_sub,
                     mac_net_pxe=mac_net_pxe_sub, mac_boot_device_rhel6=mac_boot_device_rhel6_sub) + os.linesep)
@@ -92,12 +92,12 @@ def generate_menu_redhat(os_version_sub, os_sub_version_max_sub, os_sub_version_
         string_to_write.append("net_add_addr eno14 efinet14 100.2.36.19" + os.linesep)
         if os_sub_version_max_sub == "7":
             string_to_write.append(
-                "linux (http)/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz modprobe.blacklist=qat_c62x inst.ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg".format(
+                "linux (http)/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz modprobe.blacklist=qat_c62x ip=dhcp inst.ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg".format(
                     os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                     os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub, ipaddress_dhcp=ipaddress_dhcp_sub,
                     mac_net_pxe=mac_net_pxe_sub) + os.linesep)
         elif os_sub_version_max_sub == "6":
-            string_to_write.append("linux (http)/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg ksdevice={mac_boot_device_rhel6}".format(
+            string_to_write.append("linux (http)/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/vmlinuz ip=dhcp ks=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.cfg ksdevice={mac_boot_device_rhel6}".format(
                     os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                     os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub, ipaddress_dhcp=ipaddress_dhcp_sub,
                     mac_net_pxe=mac_net_pxe_sub, mac_boot_device_rhel6=mac_boot_device_rhel6_sub) + os.linesep)
@@ -114,7 +114,7 @@ def generate_menu_suse(os_version_sub, os_sub_version_max_sub, os_sub_version_mi
         string_to_write.append("#!ipxe" + os.linesep)
         string_to_write.append("set timeout=1" + os.linesep)
         string_to_write.append(
-            "kernel http://{ipaddress_dhcp}/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/linux initrd=initrd splash=silent showopts edd=off  install=http://100.2.36.3/iso/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit} autoyast=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.xml".format(
+            "kernel http://{ipaddress_dhcp}/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/linux initrd=initrd splash=silent showopts edd=off  install=http://{ipaddress_dhcp}/iso/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit} autoyast2=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.xml".format(
                 os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,ipaddress_dhcp=ipaddress_dhcp_sub, os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub, mac_net_pxe=mac_net_pxe_sub) + os.linesep)
         string_to_write.append(
             "initrd http://{ipaddress_dhcp}/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/initrd".format(
@@ -147,7 +147,7 @@ def generate_menu_suse(os_version_sub, os_sub_version_max_sub, os_sub_version_mi
         string_to_write.append("net_add_addr eno13 efinet13 100.2.36.18" + os.linesep)
         string_to_write.append("net_add_addr eno14 efinet14 100.2.36.19" + os.linesep)
         string_to_write.append(
-            "linux (http)/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/linux splash=silent showopts install=http://{ipaddress_dhcp}/iso/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit} autoyast=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.xml".format(
+            "linux (http)/images-uefi/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit}/linux splash=silent showopts install=http://{ipaddress_dhcp}/iso/{os_version}/{os_version}{os_sub_version_max}-{os_sub_version_min}_{os_bit} autoyast2=http://{ipaddress_dhcp}/ks/ks_all/{mac_net_pxe}.xml".format(
                 os_version=os_version_sub, os_sub_version_max=os_sub_version_max_sub,
                 os_sub_version_min=os_sub_version_min_sub, os_bit=os_bit_sub, ipaddress_dhcp=ipaddress_dhcp_sub,
                 mac_net_pxe=mac_net_pxe_sub) + os.linesep)
@@ -710,8 +710,7 @@ def setpxe(bios_mode_sub, bmc_ip_sub, bmc_username_sub, bmc_password_sub):
             else:
                 #self.message_error('获取服务器当前状态异常！请检查BMC连接状态！'.decode('gbk'))
                 os._exit(255)
-#else:
-#    self.message_error('输入缺失！请检查输入！'.decode('gbk'))
+
 
 ipaddress_dhcp = "100.2.36.2"
 ipaddress_windows = '100.2.38.14'
