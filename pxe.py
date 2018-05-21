@@ -714,7 +714,7 @@ class PXEframe(wx.Frame):
         if flag_upload_ks_menu == 1:
             self.message_ok("KS文件产生成功！".decode('gbk'))
 
-    def generate_ks_suse(self, os_version, os_sub_version, mac_net_pxe_temp, mac_boot_device_rhel6, bios_mode, os_bit):
+    def generate_ks_suse(self, os_version, os_sub_version, mac_net_pxe_temp, mac_boot_device_rhel6, bios_mode, os_bit, os_disk):
         flag_ks_status = 1
         flag_ks_local_exists = 0
         mac_net_pxe = mac_net_pxe_temp.upper()
@@ -729,6 +729,9 @@ class PXEframe(wx.Frame):
         local_path_ks = os.path.join(os.getcwd(), filename_ks_local_suse)
         remote_path_ks = r'/var/www/html/ks/ks_all/'
         local_path_menu = os.path.join(os.getcwd(), filename_menu_to_gen)
+        local_path_pre = os.path.join(os.getcwd(), "pre.txt")
+        filename_remote_pre = "auto-partition-%s.sh" % bios_mode
+
         # download ks_template
         try:
             down_ks_template = paramiko.Transport('%s:22' % ipaddress_dhcp)
@@ -737,6 +740,10 @@ class PXEframe(wx.Frame):
             try:
                 # download_ks
                 sftp_down_ks.get(localpath=local_path_ks, remotepath=remote_path_ks_template)
+                # download_pre
+                remote_dir_pre = r"/var/www/html/ks/auto_partition/suse/"
+                remote_path_pre = os.path.join(remote_dir_pre, filename_remote_pre)
+                sftp_down_ks.get(localpath=local_path_pre, remotepath=remote_path_pre)
                 sftp_down_ks.close()
             except IOError:
                 self.message_error("未从TFTP服务器找到对应的OS的KS模板！请检查输入或者联系管理员检查！".decode('gbk'))
@@ -745,11 +752,68 @@ class PXEframe(wx.Frame):
         except paramiko.ssh_exception.SSHException:
             self.message_error("无法连接至DHCP服务器，请检查网络连接！".decode('gbk'))
 
+        # change pre file
+        handler_ks_change = open(local_path_pre, mode='rb')
+        pattern_os_disk = re.compile(r'firstdisk=sda')
+        string_pre = ''
+        for item_data_pre in handler_ks_change:
+            if re.search(pattern_os_disk, item_data_pre.decode()):
+                item_data_pre_1 = re.sub(pattern_os_disk, "firstdisk=%s" % os_disk, item_data_pre.decode())
+                string_pre += item_data_pre_1
+            else:
+                string_pre += item_data_pre.decode()
+        handler_ks_change.close()
+        handler_ks_change = open(local_path_pre, mode='wb')
+        handler_ks_change.write(string_pre.encode())
+        handler_ks_change.close()
+
+        # upload pre file
+        # change pre file name
+        filename_pre_suse = "".join(mac_boot_device_rhel6.split(":"))
+        flag_upload_pre_menu = 1
+        remote_path_pre = os.path.join(r'/var/www/html/ks/ks_all/', filename_pre_suse)
+        try:
+            upload_menu = paramiko.Transport('%s:22' % ipaddress_dhcp)
+            upload_menu.connect(username=username_dhcp, password=password_dhcp)
+            sftp_upload_pre_suse = paramiko.SFTPClient.from_transport(upload_menu)
+            # upload_pre
+            sftp_upload_pre_suse.put(localpath=local_path_pre, remotepath=remote_path_pre)
+            sftp_upload_pre_suse.close()
+            upload_menu.close()
+            os.remove(local_path_pre)
+        except (paramiko.ssh_exception.SSHException, paramiko.SSHException):
+            flag_upload_pre_menu = 0
+            self.message_error("无法连接至DHCP服务器，请检查网络连接！".decode('gbk'))
+
 
         # generate_menu
         with open(local_path_menu, mode='wb') as file_menu:
             data_menu = self.generate_menu_suse(os_version, os_sub_version_max, os_sub_version_min, os_bit, bios_mode, ipaddress_dhcp, mac_net_pxe)
             file_menu.writelines(data_menu)
+
+        # change ks file
+        file_ks_read = open(local_path_ks, mode="rb")
+        file_ks_content = file_ks_read.readlines()
+        file_ks_read.close()
+        pattern_osdisk_suse = re.compile(r'osdisk')
+        pattern_pre_suse = re.compile(r'prefile')
+        string_pre_suse = ''
+        for item_ks_suse in file_ks_content:
+            if re.search(pattern_osdisk_suse, item_ks_suse.decode()):
+                item_ks_suse_1 = re.sub(pattern_osdisk_suse, "%s" % os_disk, item_ks_suse.decode())
+                string_pre_suse += item_ks_suse_1
+            else:
+                if re.search(pattern_pre_suse, item_ks_suse.decode()):
+                    item_ks_suse_1 = re.sub(pattern_pre_suse, "%s" % filename_pre_suse, item_ks_suse.decode())
+                    string_pre_suse += item_ks_suse_1
+                else:
+                    string_pre_suse += item_ks_suse.decode()
+        os.remove(filename_ks_local_suse)
+        # local_path_ks_use = os.path.join(os.getcwd(), filename_ks_local_suse)
+
+        file_ks_write = open(local_path_ks, mode="wb")
+        file_ks_write.write(string_pre_suse.encode())
+        file_ks_write.close()
 
         # upload menu file & ks
         flag_upload_ks_menu = 1
@@ -966,7 +1030,7 @@ class PXEframe(wx.Frame):
                             if os_version == "redhat" or os_version == "centos":
                                 self.generate_ks_redhat_centos(os_version, os_sub_version, mac_net_pxe_temp, mac_boot_device_rhel6, bios_mode, os_bit, os_disk)
                             elif os_version == "suse":
-                                self.generate_ks_suse(os_version, os_sub_version, mac_net_pxe_temp, mac_boot_device_rhel6, bios_mode, os_bit)
+                                self.generate_ks_suse(os_version, os_sub_version, mac_net_pxe_temp, mac_boot_device_rhel6, bios_mode, os_bit, os_disk)
                             elif os_version == "ubuntu":
                                 self.generate_ks_ubuntu(os_version, os_sub_version, mac_net_pxe_temp, mac_boot_device_rhel6, bios_mode, os_bit, os_disk)
                             elif os_version == "windows":
@@ -983,6 +1047,8 @@ class PXEframe(wx.Frame):
         mac_net_pxe_temp = self.textctrl_write_mac.GetValue().strip()
         mac_net_pxe = mac_net_pxe_temp.upper()
         mac_boot_device_rhel6 = re.sub(r'-', ':', mac_net_pxe_temp.lower())
+        filename_pre_remove = "".join(mac_boot_device_rhel6.split(":"))
+
         if len(bios_mode) == 0:
             self.message_error("BIOS模式未选择，请选择！".decode('gbk'))
         else:
@@ -998,10 +1064,12 @@ class PXEframe(wx.Frame):
                         ssh_del_ks.exec_command(command='rm -rf /var/www/html/ipxe-uefi.cfg/%s.efi' % mac_boot_device_rhel6 )
                         if os_version != "windows":
                             ssh_del_ks.exec_command(command='rm -rf /opt/config/%s.sh' % mac_boot_device_rhel6)
+                            ssh_del_ks.exec_command(command='rm -rf /opt/config/%s.cfg' % mac_boot_device_rhel6)
                     elif bios_mode == "legacy":
                         ssh_del_ks.exec_command(command='rm -rf /var/www/html/ipxe-legacy.cfg/%s' % mac_boot_device_rhel6 + ".cfg")
                     # if os_version != "windows":
                     ssh_del_ks.exec_command(command='rm -rf /var/www/html/ks/ks_all/%s' % filename_ks)
+                    ssh_del_ks.exec_command(command='rm -rf /var/www/html/ks/ks_all/%s' % filename_pre_remove)
                     ssh_del_ks.close()
                     self.message_ok("KS文件从服务器删除成功！".decode('gbk'))
                 except paramiko.SSHException:
